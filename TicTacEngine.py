@@ -1,16 +1,15 @@
-# TicTacEngine v1.1 (21.04.2022) - made by @Cumachelas
+# TicTacEngine v1.2 (22.04.2022) - made by @Cumachelas
 # Use the described below methonds and objects to quickly build your own TicTacToe games!
 
 from array import *
 import random
 import copy
-
-class CellError(Exception):
+class CellOccupiedError(Exception):
     pass
-
 class BoardOverflowError(Exception):
     pass
-
+class InvalidCellError(Exception):
+    pass
 class Mark:
     
     # Defined players, designed for expansion
@@ -19,16 +18,37 @@ class Mark:
     EMPTY = " "
     
     # Constructor for 'Mark'
-    def __init__(self, starting) -> None:
-        self.active:str = starting
+    def __init__(self, active=X, scoreX:int=0, scoreO:int=0, starting=None) -> None:
+        self.active:str = active
+        self.scoreX:int = scoreX
+        self.scoreO:int = scoreO
+        self.starting:Mark = active
 
-    # Iterates to the next player
-    def nextPlayer(self):
+    # Iterates to the next player, either from active or from one passed
+    def nextPlayer(self, active_player=None):
+        if active_player:
+            self.active = copy.deepcopy(active_player)
+            return self.active
         if self.active == Mark.X:
             self.active = Mark.O
         elif self.active == Mark.O:
             self.active = Mark.X
-        
+    
+    # Iterates to the next starting player from the last starting player
+    def nextStartingPlayer(self):
+        if self.starting == Mark.X:
+            self.active = self.starting = Mark.O
+        elif self.starting == Mark.O:
+            self.starting = self.starting = Mark.X
+    
+    # Returns winner based on current scores
+    def getWinner(self):
+        if self.scoreX > self.scoreO:
+            return "X"
+        elif self.scoreO > self.scoreX:
+            return "O"
+        elif self.scoreX == self.scoreO:
+            return "Draw"
 class Board:
     
     ONGOING = "ongoing"
@@ -52,13 +72,14 @@ class Board:
             return False
     
     # Checks state if the game - returns either the winner, "draw", or "ongoing"
-    def checkForWinner(self):
+    # Argument --terminal automatically raises the score for the game by 1
+    def getCondition(self, mark_instance:Mark=None, args:str=""):
         
         # Check row integrity
         for r in range(3):
             if self.state[r][0] == self.state[r][1] == self.state[r][2] and self.state[r][2] != Mark.EMPTY:
                 return self.state[r][0]
-            
+    
         # Check column integrity
         for c in range(3):
             if self.state[0][c] == self.state[1][c] == self.state[2][c] and self.state[2][c] != Mark.EMPTY:
@@ -81,8 +102,10 @@ class Board:
     # Writes safely to a cell, thows Exception if occupied
     def safeWrite(self, cell:list, player:Mark):
         global last_move
+        if not 0 <= cell[0] <= 2 or 0 <= cell[1] <= 2:
+            raise InvalidCellError("safeWrite() input out of valid range")
         if self.isOccupied(cell):
-                raise CellError("safeWrite() cell already occupied")
+            raise CellOccupiedError("safeWrite() cell already occupied")
         else:
             last_move = cell
             self.move_count += 1
@@ -104,21 +127,25 @@ class Board:
         while True:
             try:
                 self.safeWrite([random.randint(0,2), random.randint(0,2)], player)
-            except CellError: continue
+            except CellOccupiedError: continue
             else: break
     
     # Fills the board with given number of random marks while considering the playability of the board
-    def fillBoard(self, players_class:Mark, depth:int=random.randint(1,8)):
+    def fillBoard(self, mark_instance:Mark, depth:int=random.randint(1,8)):
         if depth > 9:
             raise BoardOverflowError("fillBoard() depth too large")
         else:
             for i in range(depth):
-                if self.checkForWinner() != self.ONGOING:
+                if self.getCondition() != self.ONGOING:
                     self.undoMove()
                     break
                 else:
-                    self.makeRandomMove(players_class.active)
-                    Mark.nextPlayer(players_class)
+                    self.makeRandomMove(mark_instance.active)
+                    Mark.nextPlayer(mark_instance)
+    
+    # Clears the board
+    def clear(self):
+        self.state = copy.deepcopy(self.emptyBoard)
             
     # Undoes the given, or if none passed, the last move
     def undoMove(self, given_move:list=[]):
