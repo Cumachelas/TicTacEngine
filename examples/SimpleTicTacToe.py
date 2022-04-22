@@ -1,11 +1,10 @@
-from TicTacEngine import Board, Mark, CellOccupiedError
-from copy import deepcopy
+from TicTac3Engine import Board, Mark, CellOccupiedError
 
 # Create instance of the player manager and the playing board
 players = Mark(active=Mark.X)
 board = Board()
 
-print("\nTicTacToe CLI - made with TicTacEngine v1.2")
+print("\nTicTacToe CLI - made with TicTacEngine v1.2.2")
 print("Input the moves in format: [row from the top, 0-2],[column from right, 0-2]\n")
 print(f"The player {players.active} is starting")
 

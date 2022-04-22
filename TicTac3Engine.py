@@ -1,4 +1,4 @@
-# TicTacEngine v1.2 (22.04.2022) - made by @Cumachelas
+# TicTacEngine v1.2.2 (22.04.2022) - made by @Cumachelas
 # Use the described below methonds and objects to quickly build your own TicTacToe games!
 
 from array import *
