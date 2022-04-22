@@ -102,7 +102,7 @@ class Board:
     # Writes safely to a cell, thows Exception if occupied
     def safeWrite(self, cell:list, player:Mark):
         global last_move
-        if not 0 <= cell[0] <= 2 or 0 <= cell[1] <= 2:
+        if not 0 <= cell[0] <= 2 or not 0 <= cell[1] <= 2:
             raise InvalidCellError("safeWrite() input out of valid range")
         if self.isOccupied(cell):
             raise CellOccupiedError("safeWrite() cell already occupied")

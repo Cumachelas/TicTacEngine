@@ -1,4 +1,4 @@
-from TicTac3Engine import Board, Mark, CellOccupiedError
+from TicTac3Engine import *
 
 # Create instance of the player manager and the playing board
 players = Mark(active=Mark.X)
