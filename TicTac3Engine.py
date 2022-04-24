@@ -2,6 +2,7 @@
 # Use the described below methonds and objects to quickly build your own TicTacToe games!
 
 from array import *
+import math
 import random
 import copy
 class CellOccupiedError(Exception):
@@ -19,7 +20,7 @@ class Mark:
     
     # Constructor for 'Mark'
     def __init__(self, active=X, scoreX:int=0, scoreO:int=0, starting=None) -> None:
-        self.active:str = active
+        self.active:self = active
         self.scoreX:int = scoreX
         self.scoreO:int = scoreO
         self.starting:Mark = active
@@ -122,6 +123,15 @@ class Board:
     def cprint(self):
         print(self.state)
     
+    # Returns a list of all possible moves/free cells
+    def getMoves(self):
+        possible_moves = []
+        for row in range(3):
+            for cell in range(3):
+                if self.state[row][cell] == Mark.EMPTY:
+                    possible_moves.append([row, cell])
+        return possible_moves
+    
     # Plays a random move for a given player
     def makeRandomMove(self, player:Mark):
         while True:
@@ -154,3 +164,52 @@ class Board:
             self.state[last_move[0]][last_move[1]] = Mark.EMPTY
         else:
             self.state[last_move[0]][last_move[1]] = copy.deepcopy(given_move)
+    
+    # Makes best possible move for current player (or the one passed)
+    # Algorithms are to be passed into args -> e.g args="--prunedminimax", "--simpleminimax", "--react"
+    def makeBestMove(self, mark_instance:Mark, args:str, isMaximizer:bool=True, player:Mark=None, alpha:int=None, beta:int=None):
+        
+        if not player:
+            player = mark_instance.active
+            
+        if "--simpleminimax" in args or "--minimax" in args:
+            bestScore = -math.inf
+            bestMove:list = []
+            for move in self.getMoves():
+                self.safeWrite(move, player)
+                score = self.__minimax(True, player) #
+                self.undoMove()
+                if score > bestScore:
+                    bestScore = score
+                    bestMove = copy.deepcopy(move)
+            self.safeWrite(bestMove, player)
+                
+        elif "--prunedminimax" in args:
+            pass
+        elif "--react" in args:
+            pass
+        else:
+            raise TypeError("makeBestMove() no algorithm specified")
+        
+    def __minimax(self, isMaximizerTurn:bool, maximizerMark:Mark):
+        condition = self.getCondition()
+        if condition == self.DRAW:
+            return 0
+        elif condition == self.ONGOING:
+            pass
+        elif condition == maximizerMark: #
+            return 1
+        else:
+            return -1
+        
+        scores = []
+        for move in self.getMoves():
+            self.safeWrite(move, maximizerMark) #
+            scores.append(self.__minimax(not isMaximizerTurn, maximizerMark)) #
+            self.undoMove()
+        
+        if isMaximizerTurn:
+            return max(scores)
+        else:
+            return min(scores)
+        
